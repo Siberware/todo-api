@@ -6,26 +6,6 @@ var db = require('./db.js');
 var app = express();
 var PORT = 3000;
 var todoNextId = 1;
-// var todos = [{
-// 		"description": " Backup the truck  ",
-// 		"completed": true,
-// 		"id": 1
-// 	}, {
-// 		"description": "Get pipe",
-// 		"completed": false,
-// 		"id": 2
-// 	}, {
-// 		"description": "Do stuff that needs to be done",
-// 		"completed": false,
-// 		"id": 3
-// 	},
-
-// 	{
-// 		"description": " Do stuff that needs to be done before the rain comes ",
-// 		"completed": false,
-// 		"id": 4
-// 	}
-// ];
 
 app.use(bodyParser.json());
 
@@ -88,52 +68,52 @@ app.post('/todos', function(req, res) {
 app.delete('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id);
 
+	db.todo.destroy({
+		where: {
+			id: todoId
+		}
+	}).then(function(rowsDeleted) {
+		if(rowsDeleted === 0) {
+			res.status(404).json({
+				error: "No todos with id: " + todoId
+			});
+		} 
+		else {
+			res.status(204).send();
+		}
+	},function () {
+		res.status(500).send()
+	});
 	
-
-
-
-	// var matched = _.findWhere(todos, {
-	// 	id: todoId
-	// });
-
-	// if (matched) {
-	// 	todos = _.without(todos, matched);
-	// 	res.json(todos);
-	// } else {
-	// 	res.status(404).json({
-	// 		"error": "no object found with that ID"
-	// 	});
-	// }
-
 });
 
 app.put('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id);
-	var matched = _.findWhere(todos, {
-		id: todoId
-	});
 	var body = _.pick(req.body, 'description', 'completed');
-	var validAttributes = {};
-	console.log("In put", matched);
+	var attributes = {};
 
-	if (!matched) {
-		return res.status(404).send();
-	}
+	if (body.hasOwnProperty('completed')) {
+		attributes.completed = body.completed;
+	} 
 
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-		validAttributes.completed = body.completed;
-	} else if (body.hasOwnProperty('completed')) {
-		return res.status(400).send();
-	}
+	if (body.hasOwnProperty('description')) {
+		attributes.description = body.description;
+	} 
 
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-		validAttributes.description = body.description;
-	} else if (body.hasOwnProperty('description')) {
-		return res.status(400).send();
-	}
-
-	_.extend(matched, validAttributes);
-	res.json(matched);
+	db.todo.findById(todoId).then(function(todo) {
+		if(todo) {
+			todo.update(attributes).then(function(todo) {
+			res.json(todo);
+		}, function(e) {
+			res.status(400).send(e);
+		})
+		}
+		else {
+			res.status(404).send();
+		}
+	}, function() {
+		res.status(500).send();
+	});
 });
 
 db.sequelize.sync().then(function () {
