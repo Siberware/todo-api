@@ -1,4 +1,8 @@
 var Sequelize = require('sequelize');
+var env = process.env.NODE_ENV || 'development';
+
+//if(env === 'production')
+
 var sequelize = new Sequelize('AMS', 'ams_user', 'User$0ams', {
   host: 'localhost',
   dialect: 'mssql',
@@ -12,6 +16,7 @@ var sequelize = new Sequelize('AMS', 'ams_user', 'User$0ams', {
 var db = {};
 
 db.todo = sequelize.import(__dirname + '/models/todo.js');
+db.user = sequelize.import(__dirname + '/models/user.js');
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
