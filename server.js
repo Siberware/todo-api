@@ -18,7 +18,10 @@ app.get('/', function(req, res) {
 // GET /todos?completed=true
 app.get('/todos', middleware.requireAuthentication, function(req, res) {
 	var query = req.query;
-	var where = {};
+	var uId = req.user.get('id');
+	var where = {
+		userId: uId
+	};
 
 	if(query.hasOwnProperty('completed') && query.completed === 'true'){
 		where.completed = true;
@@ -44,7 +47,13 @@ app.get('/todos', middleware.requireAuthentication, function(req, res) {
 // GET /todos/:id
 app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id);
-	db.todo.findById(todoId).then(function(todo) {
+	var uId = req.user.get('id');
+	var where = {
+		id: todoId,
+		userId: uId
+	};
+
+	db.todo.findOne({where: where}).then(function(todo) {
 		if(!!todo) {
 			res.json(todo);
 		}
@@ -54,6 +63,17 @@ app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	}, function(e) {
 		res.status(500).send();
 	});
+
+	// db.todo.findById(todoId).then(function(todo) {
+	// 	if(!!todo) {
+	// 		res.json(todo);
+	// 	}
+	// 	else {
+	// 		res.status(404).send("404 Not Found");
+	// 	}
+	// }, function(e) {
+	// 	res.status(500).send();
+	// });
 });
 
 app.post('/todos', middleware.requireAuthentication, function(req, res) {
@@ -74,10 +94,12 @@ app.post('/todos', middleware.requireAuthentication, function(req, res) {
 
 app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id);
+	var uId = req.user.get('id');
 
 	db.todo.destroy({
 		where: {
-			id: todoId
+			id: todoId,
+			userId: uId
 		}
 	}).then(function(rowsDeleted) {
 		if(rowsDeleted === 0) {
@@ -98,6 +120,11 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id);
 	var body = _.pick(req.body, 'description', 'completed');
 	var attributes = {};
+	var uId = req.user.get('id');
+	var where = {
+		id: todoId,
+		userId: uId
+	};
 
 	if (body.hasOwnProperty('completed')) {
 		attributes.completed = body.completed;
@@ -107,7 +134,7 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 		attributes.description = body.description;
 	} 
 
-	db.todo.findById(todoId).then(function(todo) {
+	db.todo.findOne({where: where}).then(function(todo) {
 		if(todo) {
 			todo.update(attributes).then(function(todo) {
 			res.json(todo);
