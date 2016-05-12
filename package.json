@@ -11,7 +11,9 @@
   "dependencies": {
     "bcrypt": "^0.8.6",
     "body-parser": "^1.15.0",
+    "crypto-js": "^3.1.6",
     "express": "^4.13.4",
+    "jsonwebtoken": "^6.2.0",
     "sequelize": "^3.23.0",
     "tedious": "^1.14.0",
     "underscore": "^1.8.3"
